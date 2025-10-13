@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  mysql-db:
+    image: mysql:8.0
+    container_name: mysql-db
+    environment:
+      MYSQL_ROOT_PASSWORD: Sharan@1544
+      MYSQL_DATABASE: auth_db
+    ports:
+      - "3307:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+
+  auth-service:
+    image: java-authservice
+    container_name: auth-service
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      DB_URL: jdbc:mysql://mysql-db:3306/auth_db
+      DB_USERNAME: root
+      DB_PASSWORD: Sharan@1544
+    depends_on:
+      - mysql-db
+    ports:
+      - "8081:8080"
+
+volumes:
+  db_data:
+
+networks:
+  auth_network:
+    driver: bridge
