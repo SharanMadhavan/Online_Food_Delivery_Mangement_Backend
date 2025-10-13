@@ -1,0 +1,2 @@
+# Online_Food_Delivery_Mangement_Backend
+Backend services for online_food_delivery_management project using java and springboot
