@@ -12,7 +12,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 @RestController
 @RequestMapping("/auth")
-@CrossOrigin("*")
 public class AuthController {
 
     private final AuthService authService;
