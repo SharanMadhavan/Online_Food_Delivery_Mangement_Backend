@@ -62,7 +62,7 @@ public CorsConfigurationSource corsConfigurationSource() {
     CorsConfiguration configuration = new CorsConfiguration();
 
     configuration.setAllowedOriginPatterns(List.of(
-        "https://food-one-ashen.vercel.app",      // Vercel frontend
+        "https://food-self-three.vercel.app",     // Vercel frontend
         "https://online-food-managements-2kv1.onrender.com", // Your backend URL
         "http://localhost:*",                     // Local dev
         "http://127.0.0.1:*"
