@@ -15,6 +15,7 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import java.util.Arrays;
 import java.util.List;
 
 import static org.springframework.security.config.Customizer.withDefaults;
@@ -27,30 +28,24 @@ public class SecurityConfig {
     private JwtAuthenticationFilter jwtAuthenticationFilter;
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-            // ✅ Enable CORS and disable CSRF
             .cors(withDefaults())
             .csrf(csrf -> csrf.disable())
-
-            // ✅ Define authorization rules
             .authorizeHttpRequests(auth -> auth
-                // allow preflight OPTIONS requests
-                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                .requestMatchers("/auth/signup", "/auth/login").permitAll()
-                .requestMatchers("/auth/me").permitAll()
-                .requestMatchers("/api/restaurants", "/api/restaurants/**").permitAll()
-                .requestMatchers("/api/orders", "/api/orders/**").permitAll()
-                .requestMatchers("/api/menus/restaurant/*").permitAll()
-                .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
-                .requestMatchers("/actuator/**").permitAll()
+                .requestMatchers(
+                    "/auth/signup",
+                    "/auth/login",
+                    "/auth/me",
+                    "/swagger-ui/**",
+                    "/v3/api-docs/**",
+                    "/swagger-ui.html",
+                    "/actuator/**"
+                ).permitAll()
+                .requestMatchers("/api/**").permitAll()
                 .anyRequest().authenticated()
             )
-
-            // ✅ Set stateless session management (for JWT)
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-
-            // ✅ Add JWT filter
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
@@ -61,35 +56,26 @@ public class SecurityConfig {
         return authenticationConfiguration.getAuthenticationManager();
     }
 
-    // ✅ Proper CORS configuration to fix preflight request issue
+    // ✅ Final, production-safe CORS configuration
     @Bean
-    public CorsConfigurationSource corsConfigurationSource() {
-        CorsConfiguration configuration = new CorsConfiguration();
+public CorsConfigurationSource corsConfigurationSource() {
+    CorsConfiguration configuration = new CorsConfiguration();
 
-        // Allowed origins (your frontend URLs and backend URL)
-        configuration.setAllowedOrigins(List.of(
-            "http://localhost:5173",
-            "http://localhost:8080",
-            "https://food-one-ashen.vercel.app",
-            "https://online-food-management-new.onrender.com"
-        ));
+    configuration.setAllowedOriginPatterns(List.of(
+        "https://food-one-ashen.vercel.app",      // Vercel frontend
+        "https://online-food-managements-2kv1.onrender.com", // Your backend URL
+        "http://localhost:*",                     // Local dev
+        "http://127.0.0.1:*"
+    ));
 
-        // Allowed HTTP methods
-        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+    configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+    configuration.setAllowedHeaders(List.of("*"));
+    configuration.setAllowCredentials(true);
+    configuration.setMaxAge(3600L);
 
-        // Allowed headers
-        configuration.setAllowedHeaders(List.of("*"));
+    UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+    source.registerCorsConfiguration("/**", configuration);
+    return source;
+}
 
-        // Allow credentials (cookies, authorization headers)
-        configuration.setAllowCredentials(true);
-
-    // Expose Authorization header so browser JavaScript can read it
-    configuration.setExposedHeaders(List.of("Authorization"));
-
-        // Register configuration for all paths
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", configuration);
-
-        return source;
-    }
 }
